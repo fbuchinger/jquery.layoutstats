@@ -62,6 +62,30 @@
 
 	});
 
+	QUnit.test( "find the top font and font style/color/size", function( assert ) {
+		var topPropertyTests = [
+			{node: '<div style="font-family: Arial, sans-serif; font-size: 11px;">1234</div>', expected: {topFont:"Arial" , topStyle: "Arial 11px #000000", topSize:"11px", topColor:"#000000"},  assertion:'returns the top font size/style/color/variant used in an html document'},
+			{node: '<div style="font-family: Arial, sans-serif; font-size: 11px;"><small style="font-family: serif;">1</small><b>234</b></div>', expected: {topFont:"Arial" , topStyle: "Arial 11px #000000 bold", topSize:"11px", topColor:"#000000"},  assertion:'uses inherited styles for its calculations'},
+		];
+
+		for (var i = 0; i < topPropertyTests.length; i++){
+			var test = topPropertyTests[i];
+			var $charDiv = $(test.node).appendTo($testCanvas);
+			var res = $charDiv.layoutstats();
+			var result =  {
+				topFont: res.textTopFont,
+				topStyle: res.textTopFontStyle,
+				topSize: res.textTopFontSize,
+				topColor: res. textTopFontColor
+			}
+			var fontCountResult =  $charDiv.layoutstats().textUniqueFontCount;
+
+			assert.deepEqual(result, test.expected, test.assertion );
+
+		}
+
+	});
+
 
 
 
