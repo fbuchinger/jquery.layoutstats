@@ -129,6 +129,7 @@
 				textTopFontSize: getMaxProperty(unique.fontSizes),
 				textUniqueFontColorCount: _count(unique.fontColors),
 				textUniqueFontColors: unique.fontColors,
+				textFirst1000Chars: _getVisibleTextNodes($selectedNodes[0]).text().slice(0,1000),
 				version: '0.0.1'
 			};
 		}

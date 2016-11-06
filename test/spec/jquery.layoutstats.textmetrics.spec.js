@@ -64,25 +64,58 @@
 
 	QUnit.test( "find the top font and font style/color/size", function( assert ) {
 		var topPropertyTests = [
-			{node: '<div style="font-family: Arial, sans-serif; font-size: 11px;">1234</div>', expected: {topFont:"Arial" , topStyle: "Arial 11px #000000", topSize:"11px", topColor:"#000000"},  assertion:'returns the top font size/style/color/variant used in an html document'},
-			{node: '<div style="font-family: Arial, sans-serif; font-size: 11px;"><small style="font-family: serif;">1</small><b>234</b></div>', expected: {topFont:"Arial" , topStyle: "Arial 11px #000000 bold", topSize:"11px", topColor:"#000000"},  assertion:'uses inherited styles for its calculations'},
+			{
+				node: '<div style="font-family: Arial, sans-serif; font-size: 11px;">1234</div>',
+				expected: {topFont: "Arial", topStyle: "Arial 11px #000000", topSize: "11px", topColor: "#000000"},
+				assertion: 'returns the top font size/style/color/variant used in an html document'
+			},
+			{
+				node: '<div style="font-family: Arial, sans-serif; font-size: 11px;"><small style="font-family: serif;">1</small><b>234</b></div>',
+				expected: {topFont: "Arial", topStyle: "Arial 11px #000000 bold", topSize: "11px", topColor: "#000000"},
+				assertion: 'uses inherited styles for its calculations'
+			},
 		];
 
-		for (var i = 0; i < topPropertyTests.length; i++){
+		for (var i = 0; i < topPropertyTests.length; i++) {
 			var test = topPropertyTests[i];
 			var $charDiv = $(test.node).appendTo($testCanvas);
 			var res = $charDiv.layoutstats();
-			var result =  {
+			var result = {
 				topFont: res.textTopFont,
 				topStyle: res.textTopFontStyle,
 				topSize: res.textTopFontSize,
-				topColor: res. textTopFontColor
+				topColor: res.textTopFontColor
 			}
-			var fontCountResult =  $charDiv.layoutstats().textUniqueFontCount;
+			var fontCountResult = $charDiv.layoutstats().textUniqueFontCount;
 
-			assert.deepEqual(result, test.expected, test.assertion );
+			assert.deepEqual(result, test.expected, test.assertion);
 
 		}
+		;
+	});
+
+
+		QUnit.test( "returns the first 1000 characters of the extracted text", function( assert ) {
+
+			var txt2000Chars = (new Array (2000)).join('a') + 'a';
+			var txt1000Chars = (new Array (1000)).join('a') + 'a';
+
+			var first1000CharTests = [
+				{node: '<div style="font-family: Arial, sans-serif; font-size: 11px;">1234</div>', expected: {textFirst1000Chars:'1234'},  assertion:'returns the full text if there are less than 1000 chars'},
+				{node: '<div style="font-family: Arial, sans-serif; font-size: 11px;">'+ txt2000Chars + '</div>', expected: {textFirst1000Chars: txt1000Chars},  assertion:'returns the first 1000 chars if there are more characters on the page'},
+			];
+
+			for (var i = 0; i < first1000CharTests.length; i++){
+				var test = first1000CharTests[i];
+				var $charDiv = $(test.node).appendTo($testCanvas);
+				var res = $charDiv.layoutstats();
+				var result =  {
+					textFirst1000Chars: res.textFirst1000Chars
+				}
+
+				assert.deepEqual(result, test.expected, test.assertion );
+
+			}
 
 	});
 
