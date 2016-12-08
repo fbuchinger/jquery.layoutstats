@@ -14,7 +14,7 @@
 
 			while(node = walker.nextNode()) {
 				var justContainsWhitespace = (node.nodeValue.trim().length === 0);
-				var parentNodeVisible =  (node.parentNode && $(node.parentNode).is(':visible'));
+				var parentNodeVisible =  (node.parentNode && _isVisible($(node.parentNode)));
 				if (!justContainsWhitespace & parentNodeVisible){
 					textNodes.push(node);
 				}
@@ -37,6 +37,12 @@
 				textContent.push($(node).text());
 			});
 			return textContent.join('');
+		}
+
+		//taken from Zepto's selector.js
+		function _isVisible(elem){
+			elem = $(elem)
+			return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
 		}
 
 		var _count = function (obj){
