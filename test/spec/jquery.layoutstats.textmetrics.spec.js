@@ -123,4 +123,4 @@
 
 
 
-}( jQuery, QUnit ) );
+}( window.Zepto || window.jQuery, QUnit ) );

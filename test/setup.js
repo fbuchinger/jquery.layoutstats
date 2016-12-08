@@ -6,4 +6,4 @@
 	var $testCanvas = $( '<div id="testCanvas" style="width:100px; height:100px;"></div>' );
 	$( "body" ).prepend( $testCanvas );
 
-}( jQuery ) );
+}( window.Zepto || window.jQuery ) );

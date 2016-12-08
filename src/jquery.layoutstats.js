@@ -31,6 +31,14 @@
 			}
 		}
 
+		function _toText(nodes){
+			var textContent = [];
+			nodes.forEach(function(node){
+				textContent.push($(node).text());
+			});
+			return textContent.join('');
+		}
+
 		var _count = function (obj){
 			return Object.keys(obj).length;
 		}
@@ -45,8 +53,9 @@
 			$visibleTextNodes = _getVisibleTextNodes(element);
 
 			var fontStyles = $visibleTextNodes.each(function(){
-				var $textParent = $(this).parent();
-				var styleParams = $textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
+				var textParent = this.parentNode;
+				var css = getComputedStyle(textParent); //$textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
+				var styleParams = $.extend({},css);
 				styleParams.color = rgbToHex(styleParams.color);
 				styleParams.fontSize = Math.round(parseInt(styleParams.fontSize, 10)) + 'px';
 				var miscProperties = '';
@@ -65,7 +74,7 @@
 				}
 				nodeStyle = nodeStyle.join(" ");
 
-				var numChars = getVisibleCharCount($textParent[0]);
+				var numChars = getVisibleCharCount(textParent);
 				if (numChars > 0){
 					_updateCount(unique.fontStyles, nodeStyle, numChars);
 					_updateCount(unique.fonts, styleParams.fontFamily.split(",")[0], numChars);
@@ -78,7 +87,8 @@
 		}
 
 		var getVisibleCharCount = function(element){
-			return _getVisibleTextNodes(element).text().length;
+			var visibleTextNodes = _getVisibleTextNodes(element);
+			return _toText(visibleTextNodes).length;
 		};
 
 		var getMaxProperty = function (obj){
@@ -129,16 +139,16 @@
 				textTopFontSize: getMaxProperty(unique.fontSizes),
 				textUniqueFontColorCount: _count(unique.fontColors),
 				textUniqueFontColors: unique.fontColors,
-				textFirst1000Chars: _getVisibleTextNodes($selectedNodes[0]).text().slice(0,1000),
+				textFirst1000Chars: _toText(_getVisibleTextNodes($selectedNodes[0])).slice(0,1000),
 				version: '0.0.1'
 			};
 		}
 
-		return jQuery.each($selectedNodes, function(){
+		return $.each($selectedNodes, function(){
 			var curElement = this;
 			return getVisibleCharCount(curElement);
 		});
 	}
 
 
-} )( jQuery, window, document );
+} )( window.Zepto || window.jQuery, window, document );
