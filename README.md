@@ -73,8 +73,8 @@ At the moment, jQuery.layoutstats only collects text-related metrics, because th
 
 ### Scrapy/Splash
 
-# Follow the [scrapy/splash setup tutorial](https://github.com/scrapy-plugins/scrapy-splash) on their project page - you should have a complete scrapy/splash-compatible spider by the end of the tutorial.
-# Include the following lua script into your scrapy/splash spider class and hand it over to splash via the  `splash_args/lua_source` parameter
+1. Follow the [scrapy/splash setup tutorial](https://github.com/scrapy-plugins/scrapy-splash) on their project page - you should have a complete scrapy/splash-compatible spider by the end of the tutorial.
+2. Include the following lua script into your scrapy/splash spider class and hand it over to splash via the  `splash_args/lua_source` parameter
 ```
 lua_script = """
     function main(splash)
