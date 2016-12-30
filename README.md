@@ -1,6 +1,6 @@
 # jQuery Layoutstats
 
-A jQuery plugin to gather layout and typography related statistics from the current web page.
+A jQuery plugin to gather layout and typography related statistics from the current web page. jQuery Layoutstats can be used to efficiently track layout/styling changes in web pages over time (much faster than taking and comparing screenshots). Designed to be run with [PhantomJS](http://phantomjs.org/), [Scrapy/Splash](https://github.com/scrapy-plugins/scrapy-splash) or any other [headless browser](https://en.wikipedia.org/wiki/Headless_browser) - see Installation/Usage for details.
 
 ## Measured Layout Metrics
 ### Sample Output
@@ -68,3 +68,57 @@ At the moment, jQuery.layoutstats only collects text-related metrics, because th
 - `textFirst1000Chars`: the first 1000 characters of the web page (can be used to check whether the correct page has been analyzed or some redirect to an error page/nag screen has happened)
 - `url`: url of the analyzed webpage
 - `ISOTimeStamp`: when the page has been analyzed. 
+
+## Installation/Usage
+
+### Scrapy/Splash
+
+# Follow the [scrapy/splash setup tutorial](https://github.com/scrapy-plugins/scrapy-splash) on their project page - you should have a complete scrapy/splash-compatible spider by the end of the tutorial.
+# Include the following lua script into your scrapy/splash spider class and hand it over to splash via the  `splash_args/lua_source` parameter
+```
+lua_script = """
+    function main(splash)
+	    -- load required includes
+        splash:autoload("https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js")
+        splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/zepto-js/src/jquery.layoutstats.js")
+        splash:wait(0.5)
+        splash:go(splash.args.url)
+        splash:wait(0.5)
+		
+        -- utility function to check whether Zepto/layoutstats are available on the page
+        ready_for_measurement = splash:jsfunc("function() { return window.Zepto !== undefined && Zepto.fn.layoutstats !== undefined }")
+
+        -- test whether the measurement can start
+        function wait_for(condition)
+            local max_retries = 10
+            while not condition() do
+                splash:wait(0.1)
+                max_retries = max_retries - 1
+                if max_retries == 0 then break end
+            end
+        end
+        
+		-- measure function - either returns measurement or error to splash
+        local measure_layout = splash:jsfunc([[
+            function measureLayout() {
+                try {
+                    var measurements = Zepto('body').layoutstats();
+
+                    if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
+                        return measurements;
+                    }
+                    else {
+                        window.setTimeout(measureLayout, 500);
+                    }
+                }
+                catch (err){
+                    return {snapshotURL: location.href, error: err.message }
+                }
+            }
+        ]])
+
+        wait_for(ready_for_measurement)
+        return measure_layout()
+    end
+"""
+```
