@@ -1,6 +1,8 @@
-# jQuery Layoutstats
+# ~~jQuery~~ Layoutstats
 
-A jQuery plugin to gather layout and typography related statistics from the current web page. jQuery Layoutstats can be used to efficiently track layout/styling changes in web pages over time (much faster than taking and comparing screenshots). Designed to be run with [PhantomJS](http://phantomjs.org/), [Scrapy/Splash](https://github.com/scrapy-plugins/scrapy-splash) or any other [headless browser](https://en.wikipedia.org/wiki/Headless_browser) - see Installation/Usage for details.
+A ~~jQuery~~ plugin to gather layout and typography related statistics from the current web page. ~~jQuery~~ Layoutstats can be used to efficiently track layout/styling changes in web pages over time (much faster than taking and comparing screenshots). Designed to be run with [PhantomJS](http://phantomjs.org/), [Scrapy/Splash](https://github.com/scrapy-plugins/scrapy-splash) or any other [headless browser](https://en.wikipedia.org/wiki/Headless_browser) - see Installation/Usage for details.
+
+~~jQuery~~ is striked-through for a reason: we don't recommend using this plugin with jQuery any more, but rather with the jQuery clone [zepto.JS](http://zeptojs.com/). Many of our analyzed web pages already include their own (often older) version of jQuery. Thus, we ran into a lot of `jQuery.fn.layoutstats is undefined` errors when we injected jQuery.layoutstats together with a brand-new jQuery version to these pages.  The [zepto.JS enabled version of our plugin](https://github.com/fbuchinger/jquery.layoutstats/blob/zepto-js/src/jquery.layoutstats.js) doesn't show this behaviour. Nevertheless we want to get rid of 3rd party dependencies and make jQuery layoutstats a pure JS/DOM based library.
 
 ## Measured Layout Metrics
 ### Sample Output
