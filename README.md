@@ -6,7 +6,7 @@ A ~~jQuery~~ plugin to gather layout and typography related statistics from the 
 
 ## Measured Layout Metrics
 ### Sample Output
-This is an abbreviated sample output of jQuery.layoutstats analyzing https://web.archive.org/web/20100630035713/http://www.guardian.co.uk/. Please check the detailed explanation of each metric below.
+This is an abbreviated sample output of jQuery.layoutstats analyzing the [2010-06-30 Wayback Machine Snapshot of Guardian.co.uk](https://web.archive.org/web/20100630035713/http://www.guardian.co.uk/) . Please check the detailed explanation of each metric below.
 ```javascript
 {
     "textVisibleCharCount": 10157,
