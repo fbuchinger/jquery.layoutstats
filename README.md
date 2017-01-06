@@ -73,6 +73,45 @@ At the moment, jQuery.layoutstats only collects text-related metrics, because th
 
 ## Installation/Usage
 
+### Tampermonkey
+If you want to try out jQuery.layoutStats directly in your browser, you can do so by installing the [Tampermonkey extension](https://tampermonkey.net/) for Google Chrome or Firefox. After the installation has completed, create the following userscript in [Tampermonkey's web interface](https://tampermonkey.net/faq.php?ext=dhdg#Q102). Make sure to adjust the @match parameters of the script to the url(s) of the web pages you want to analyze. For more information, please consult Tampermonkey's [UserScript documentation](https://tampermonkey.net/documentation.php?ext=dhdg#metadata).
+
+```javascript
+// ==UserScript==
+// @name         jQuery.layoutStats Injector
+// @namespace    https://download.url/of/this/script
+// @version      0.1.3
+// @description  injects jQuery.layoutStats into @matched webpages and outputs their layout metrics to the console
+// @author       Franz Buchinger
+// @match        https://web.archive.org/web/*
+// @match        http://web.archive.org/web/*
+// @require https://code.jquery.com/jquery-latest.js
+// @require      https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/jquery.layoutstats.js
+// ==/UserScript==
+
+//enable jQuery non-conflict mode to avoid collisions with jQuery versions that are already embedded in the page
+jQLA = jQuery.noConflict(true);
+
+//invokes jQuery.layoutStats on the page, delays the measurement if page isn't yet ready
+function measureLayout() {
+    jQLA(window).off("unload");
+    var measurements = jQLA('body').layoutstats();
+    if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
+        console.log(measurements);
+    }
+    else {
+        window.setTimeout(measureLayout, 500);
+    }
+}
+
+// invokes measureLayout() function once page content has been loaded
+jQLA(document).ready(function(){
+    console.log("jQuery.layoutStats Injector invoked");
+    jQLA('#wm-ipp-inside').find('a[href="#close"]').trigger('click'); // hide internet archive navigator before measuring.
+    measureLayout();
+});
+```
+
 ### Scrapy/Splash
 
 1. Follow the [scrapy/splash setup tutorial](https://github.com/scrapy-plugins/scrapy-splash) on their project page - you should have a complete scrapy/splash-compatible spider by the end of the tutorial.
