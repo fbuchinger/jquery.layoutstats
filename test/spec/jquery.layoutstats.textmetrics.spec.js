@@ -2,7 +2,7 @@
 
 	"use strict";
 
-	var $testCanvas = $( "#testCanvas" );
+	var testCanvas = document.getElementById('testCanvas');
 
 	QUnit.module( "jQuery Layoutstats Text Metrics", {
 		beforeEach: function() {
@@ -11,7 +11,7 @@
 		afterEach: function() {
 
 			// we empty the testcanvas
-			$testCanvas.empty();
+			testCanvas.innerHTML = '';
 		}
 	} );
 
@@ -28,8 +28,9 @@
 
 		for (var i = 0; i < charCountTests.length; i++){
 			var test = charCountTests[i];
-			var $charDiv = $(test.node).appendTo($testCanvas);
-			var result =  $charDiv.layoutstats().textVisibleCharCount;
+			testCanvas.innerHTML = test.node;
+			var charDiv = testCanvas.firstElementChild;
+			var result =  layoutstats(charDiv).textVisibleCharCount;
 
 			assert.equal(result, test.charCount, test.assertion );
 		}
@@ -47,14 +48,15 @@
 
 		for (var i = 0; i < charCountTests.length; i++){
 			var test = charCountTests[i];
-			var $charDiv = $(test.node).appendTo($testCanvas);
-			var res = $charDiv.layoutstats();
+			testCanvas.innerHTML = test.node;
+			var charDiv = testCanvas.firstElementChild;
+			var res = layoutstats(charDiv);
 			var result =  {
 				fontCount: res.textUniqueFontCount,
 				colorCount: res.textUniqueFontColorCount,
 				styleCount: res.textUniqueFontStyleCount
 			}
-			var fontCountResult =  $charDiv.layoutstats().textUniqueFontCount;
+			var fontCountResult =  layoutstats(charDiv).textUniqueFontCount;
 
 			assert.deepEqual(result, test.expected, test.assertion );
 
@@ -78,15 +80,16 @@
 
 		for (var i = 0; i < topPropertyTests.length; i++) {
 			var test = topPropertyTests[i];
-			var $charDiv = $(test.node).appendTo($testCanvas);
-			var res = $charDiv.layoutstats();
+			testCanvas.innerHTML = test.node;
+			var charDiv = testCanvas.firstElementChild;
+			var res = layoutstats(charDiv);
 			var result = {
 				topFont: res.textTopFont,
 				topStyle: res.textTopFontStyle,
 				topSize: res.textTopFontSize,
 				topColor: res.textTopFontColor
 			}
-			var fontCountResult = $charDiv.layoutstats().textUniqueFontCount;
+			var fontCountResult = layoutstats(charDiv).textUniqueFontCount;
 
 			assert.deepEqual(result, test.expected, test.assertion);
 
@@ -107,8 +110,9 @@
 
 			for (var i = 0; i < first1000CharTests.length; i++){
 				var test = first1000CharTests[i];
-				var $charDiv = $(test.node).appendTo($testCanvas);
-				var res = $charDiv.layoutstats();
+				testCanvas.innerHTML = test.node;
+				var charDiv = testCanvas.firstElementChild;
+				var res = layoutstats(charDiv);
 				var result =  {
 					textFirst1000Chars: res.textFirst1000Chars
 				}
@@ -123,4 +127,4 @@
 
 
 
-}( window.Zepto || window.jQuery, QUnit ) );
+}( window, QUnit ) );

@@ -1,6 +1,13 @@
-;( function( $, window, document, undefined ) {
-	$.fn.layoutstats = function (options){
-		var $selectedNodes = this;
+;( function( window, document, undefined ) {
+	window.layoutstats = function (rootNode, options){
+		var selectedNodes;
+		if (rootNode instanceof Element){
+			selectedNodes = [rootNode]
+		}
+		else {
+			selectedNodes = document.querySelectorAll(rootNode);
+		}
+
 		var _getVisibleTextNodes = function (element){
 			var walker = document.createTreeWalker(
 				element,
@@ -14,12 +21,12 @@
 
 			while(node = walker.nextNode()) {
 				var justContainsWhitespace = (node.nodeValue.trim().length === 0);
-				var parentNodeVisible =  (node.parentNode && _isVisible($(node.parentNode)));
+				var parentNodeVisible =  (node.parentNode && _isVisible(node.parentNode));
 				if (!justContainsWhitespace & parentNodeVisible){
 					textNodes.push(node);
 				}
 			}
-			return $(textNodes);
+			return textNodes;
 		};
 
 		var _updateCount = function (obj, key, count){
@@ -34,15 +41,14 @@
 		function _toText(nodes){
 			var textContent = [];
 			nodes.forEach(function(node){
-				textContent.push($(node).text());
+				textContent.push(node.textContent);
 			});
 			return textContent.join('');
 		}
 
 		//taken from Zepto's selector.js
 		function _isVisible(elem){
-			elem = $(elem)
-			return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
+			return  elem.offsetParent !== null;
 		}
 
 		var _count = function (obj){
@@ -56,12 +62,12 @@
 				fontSizes: {},
 				fonts: {}
 			},
-			$visibleTextNodes = _getVisibleTextNodes(element);
+			visibleTextNodes = _getVisibleTextNodes(element);
 
-			var fontStyles = $visibleTextNodes.each(function(){
-				var textParent = this.parentNode;
+			var fontStyles = visibleTextNodes.forEach(function(node){
+				var textParent = node.parentNode;
 				var css = getComputedStyle(textParent); //$textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
-				var styleParams = $.extend({},css);
+				var styleParams = Object.assign({},css);
 				styleParams.color = rgbToHex(styleParams.color);
 				styleParams.fontSize = Math.round(parseInt(styleParams.fontSize, 10)) + 'px';
 				var miscProperties = '';
@@ -129,10 +135,10 @@
 
 		}
 
-		if ($selectedNodes.length == 1){
-			var unique = getUniqueFontStyles($selectedNodes[0]);
+		if (selectedNodes.length == 1){
+			var unique = getUniqueFontStyles(selectedNodes[0]);
 			return {
-				textVisibleCharCount: getVisibleCharCount($selectedNodes[0]),
+				textVisibleCharCount: getVisibleCharCount(selectedNodes[0]),
 				textUniqueFontStyleCount: _count(unique.fontStyles),
 				textUniqueFontStyles: unique.fontStyles,
 				textUniqueFontSizeCount: _count(unique.fontStyles),
@@ -145,16 +151,15 @@
 				textTopFontSize: getMaxProperty(unique.fontSizes),
 				textUniqueFontColorCount: _count(unique.fontColors),
 				textUniqueFontColors: unique.fontColors,
-				textFirst1000Chars: _toText(_getVisibleTextNodes($selectedNodes[0])).slice(0,1000),
+				textFirst1000Chars: _toText(_getVisibleTextNodes(selectedNodes[0])).slice(0,1000),
 				version: '0.0.1'
 			};
 		}
 
-		return $.each($selectedNodes, function(){
-			var curElement = this;
-			return getVisibleCharCount(curElement);
+		return selectedNodes.forEach(function(node){
+			return getVisibleCharCount(node);
 		});
 	}
 
 
-} )( window.Zepto || window.jQuery, window, document );
+} )( window, document );

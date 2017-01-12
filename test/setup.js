@@ -1,9 +1,12 @@
-( function( $ ) {
+( function( document ) {
 
 	"use strict";
 
 	// create an element to run tests inside
-	var $testCanvas = $( '<div id="testCanvas" style="width:100px; height:100px;"></div>' );
-	$( "body" ).prepend( $testCanvas );
+	var testCanvas = document.createElement('div');
+	testCanvas.id = "testCanvas";
+	testCanvas.style.width = "100px";
+	testCanvas.style.height = "100px";
+	document.body.appendChild(testCanvas);
 
-}( window.Zepto || window.jQuery ) );
+}( window.document) );
