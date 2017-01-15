@@ -46,9 +46,8 @@
 			return textContent.join('');
 		}
 
-		//taken from Zepto's selector.js
 		function _isVisible(elem){
-			return  elem.offsetParent !== null;
+			return  !(elem.offsetWidth === 0 && elem.offsetHeight === 0);
 		}
 
 		var _count = function (obj){
