@@ -55,6 +55,21 @@
 			return Object.keys(obj).length;
 		}
 
+		//taken from http://youmightnotneedjquery.com/
+		var _extend = function(out) {
+			out = out || {};
+
+			for (var i = 1; i < arguments.length; i++) {
+				if (!arguments[i])
+					continue;
+				for (var key in arguments[i]) {
+					if (arguments[i].hasOwnProperty(key))
+						out[key] = arguments[i][key];
+				}
+			}
+			return out;
+		};
+
 		var getUniqueFontStyles = function(element){
 			var unique = {
 				fontStyles: {},
@@ -67,7 +82,7 @@
 			var fontStyles = visibleTextNodes.forEach(function(node){
 				var textParent = node.parentNode;
 				var css = getComputedStyle(textParent); //$textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
-				var styleParams = Object.assign({},css);
+				var styleParams = _extend({},css);
 				styleParams.color = rgbToHex(styleParams.color);
 				styleParams.fontSize = Math.round(parseInt(styleParams.fontSize, 10)) + 'px';
 				var miscProperties = '';
