@@ -1,12 +1,19 @@
-# ~~jQuery~~ Layoutstats
+# layoutstats.js
 
-A ~~jQuery~~ plugin to gather layout and typography related statistics from the current web page. ~~jQuery~~ Layoutstats can be used to efficiently track layout/styling changes in web pages over time (much faster than taking and comparing screenshots). Designed to be run with [PhantomJS](http://phantomjs.org/), [Scrapy/Splash](https://github.com/scrapy-plugins/scrapy-splash) or any other [headless browser](https://en.wikipedia.org/wiki/Headless_browser) - see Installation/Usage for details.
+A [VanillaJS](https://developer.mozilla.org/en-US/docs/Web/JavaScript) plugin to gather layout and typography related statistics from the current web page. layoutstats.js can be used to efficiently track layout/styling changes in web pages over time (much faster than taking and comparing screenshots). Designed to be run with [PhantomJS](http://phantomjs.org/), [Scrapy/Splash](https://github.com/scrapy-plugins/scrapy-splash) or any other [headless browser](https://en.wikipedia.org/wiki/Headless_browser) - see Installation/Usage for details.
 
-~~jQuery~~ is striked-through for a reason: we don't recommend using this plugin with jQuery any more, because this often results in `jQuery.fn.layoutstats is undefined` errors when the [analyzed page itself embeds a version of jQuery](http://stackoverflow.com/questions/1566595/can-i-use-multiple-versions-of-jquery-on-the-same-page).  To mitigate the issue, we created a [zepto.JS enabled version of our plugin](https://github.com/fbuchinger/jquery.layoutstats/blob/zepto-js/src/jquery.layoutstats.js), which doesn't show this behaviour. In future, we want to get rid of 3rd party dependencies and make jQuery layoutstats a pure JS/DOM based library.
+## Usage
+
+```
+ document.addEventListener("DOMContentLoaded", function(event) {
+    console.log(layoutstats(document.body));
+  });
+
+```
 
 ## Measured Layout Metrics
 ### Sample Output
-This is an abbreviated sample output of jQuery.layoutstats analyzing the [2010-06-30 Wayback Machine Snapshot of Guardian.co.uk](https://web.archive.org/web/20100630035713/http://www.guardian.co.uk/) . Please check the detailed explanation of each metric below.
+This is an abbreviated sample output of layoutstats.js analyzing the [2010-06-30 Wayback Machine Snapshot of Guardian.co.uk](https://web.archive.org/web/20100630035713/http://www.guardian.co.uk/) . Please check the detailed explanation of each metric below.
 ```javascript
 {
     "textVisibleCharCount": 10157,
@@ -43,7 +50,7 @@ This is an abbreviated sample output of jQuery.layoutstats analyzing the [2010-0
         "#333333": 5474,
         "#d61d00": 145,
         "#bebebe": 6,
-        //... 
+        //...
     },
     "textFirst1000Chars": "Mobile siteSign inRegisterText larger·smaller\n\t\t\n\t        About Us\n    Webfeed\n\t\t\n\t        Today's paper\n    \n\t\t\n\t        Zeitgeist\n    Consumer publisher of the year | 30 June 2010\n\t\t\t\t    \n\t                        | Last updated three minutes ago \n            \n\t\t\tWeather | Cape Town | 15°C7°CWimbledon26°C15°CNewsWorld CupCommentCultureBusinessMoneyLife & styleTravelEnvironmentTVVideoCommunityJobsNewsPoliticsUKWorldUSMediaEducationSocietyScienceTechnologyLawSportGuardianObserverBlogsBreaki....",
     "url": "https://web.archive.org/web/20100630035713/http://www.guardian.co.uk/",
@@ -52,7 +59,7 @@ This is an abbreviated sample output of jQuery.layoutstats analyzing the [2010-0
 ```
 
 ### Text-related metrics
-At the moment, jQuery.layoutstats only collects text-related metrics, because they are easy to gather and still reveal important information about the layout and styling of a web page. When calculating these metrics, jQuery.layoutstats only considers the visible text nodes of a web page. Hidden text (which might be caused by the usage of menu systems or Infinite Scroll) is ignored.
+At the moment, layoutstats.js only collects text-related metrics, because they are easy to gather and still reveal important information about the layout and styling of a web page. When calculating these metrics, layoutstats.js only considers the visible text nodes of a web page. Hidden text (which might be caused by the usage of menu systems or Infinite Scroll) is ignored.
 
 - `textVisibleCharCount`: is the number of visible characters on the web page. The metric shows how much text content is available on a page. The number roughly corresponds to the copied text length from a web page (i.e. select all text on the page and then paste it to a text editor)
 - `textTopFont`: the name of the most frequently used font on the page (the one that most text characters are rendered with)
@@ -69,24 +76,23 @@ At the moment, jQuery.layoutstats only collects text-related metrics, because th
 - `textUniqueFontColors`: an object containing all font colors used on the page.
 - `textFirst1000Chars`: the first 1000 characters of the web page (can be used to check whether the correct page has been analyzed or some redirect to an error page/nag screen has happened)
 - `url`: url of the analyzed webpage
-- `ISOTimeStamp`: when the page has been analyzed. 
+- `ISOTimeStamp`: when the page has been analyzed.
 
 ## Installation/Usage
 
 ### Tampermonkey
-If you want to try out jQuery.layoutStats directly in your browser, you can do so by installing the [Tampermonkey extension](https://tampermonkey.net/) for Google Chrome or Firefox. After the installation has completed, create the following userscript in [Tampermonkey's web interface](https://tampermonkey.net/faq.php?ext=dhdg#Q102). Make sure to adjust the @match parameters of the script to the url(s) of the web pages you want to analyze. For more information, please consult Tampermonkey's [UserScript documentation](https://tampermonkey.net/documentation.php?ext=dhdg#metadata).
+If you want to try out layoutstats.js directly in your browser, you can do so by installing the [Tampermonkey extension](https://tampermonkey.net/) for Google Chrome or Firefox. After the installation has completed, create the following userscript in [Tampermonkey's web interface](https://tampermonkey.net/faq.php?ext=dhdg#Q102). Make sure to adjust the @match parameters of the script to the url(s) of the web pages you want to analyze. For more information, please consult Tampermonkey's [UserScript documentation](https://tampermonkey.net/documentation.php?ext=dhdg#metadata).
 
 ```javascript
 // ==UserScript==
-// @name         jQuery.layoutStats Injector
+// @name         layoutstats.js Injector
 // @namespace    https://download.url/of/this/script
 // @version      0.1.3
-// @description  injects jQuery.layoutStats into @matched webpages and outputs their layout metrics to the console
+// @description  injects layoutstats.js into @matched webpages and outputs their layout metrics to the console
 // @author       Franz Buchinger
 // @match        https://web.archive.org/web/*
 // @match        http://web.archive.org/web/*
-// @require https://code.jquery.com/jquery-latest.js
-// @require      https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/jquery.layoutstats.js
+// @require      https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js
 // ==/UserScript==
 
 //enable jQuery non-conflict mode to avoid collisions with jQuery versions that are already embedded in the page
@@ -94,8 +100,7 @@ jQLA = jQuery.noConflict(true);
 
 //invokes jQuery.layoutStats on the page, delays the measurement if page isn't yet ready
 function measureLayout() {
-    jQLA(window).off("unload");
-    var measurements = jQLA('body').layoutstats();
+    var measurements = layoutstats(document.body);
     if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
         console.log(measurements);
     }
@@ -105,9 +110,7 @@ function measureLayout() {
 }
 
 // invokes measureLayout() function once page content has been loaded
-jQLA(document).ready(function(){
-    console.log("jQuery.layoutStats Injector invoked");
-    jQLA('#wm-ipp-inside').find('a[href="#close"]').trigger('click'); // hide internet archive navigator before measuring.
+ document.addEventListener("DOMContentLoaded", function(event) {
     measureLayout();
 });
 ```
@@ -120,14 +123,13 @@ jQLA(document).ready(function(){
 lua_script = """
     function main(splash)
 	    -- load required includes
-        splash:autoload("https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js")
-        splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/zepto-js/src/jquery.layoutstats.js")
+        splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
         splash:wait(0.5)
-		
+
         -- utility function to check whether Zepto/layoutstats are available on the page
-        ready_for_measurement = splash:jsfunc("function() { return window.Zepto !== undefined && Zepto.fn.layoutstats !== undefined }")
+        ready_for_measurement = splash:jsfunc("function() { return window.layoutstats !== undefined }")
 
         -- test whether the measurement can start
         function wait_for(condition)
@@ -138,12 +140,12 @@ lua_script = """
                 if max_retries == 0 then break end
             end
         end
-        
+
 		-- measure function - either returns measurement or error to splash
         local measure_layout = splash:jsfunc([[
             function measureLayout() {
                 try {
-                    var measurements = Zepto('body').layoutstats();
+                    var measurements = layoutstats(document.body);
 
                     if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
                         return measurements;
