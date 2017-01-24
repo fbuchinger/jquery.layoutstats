@@ -80,6 +80,12 @@ function incrementAcc (acc, item){
 	return acc;
 }
 
+function sortKeysByValue (obj){
+	return Object.keys(obj).sort(function(keyA, keyB){
+		return obj[keyB] - obj[keyA];
+	});
+}
+
 var reducers = {
 	'sum': {
 		fn: function (acc, item){
@@ -110,24 +116,30 @@ var reducers = {
 		metricPrefix: 'Unique',
 		metricSuffix: 'Count'
 	},
+	'uniquekeylist': {
+		fn: function (acc, item, itemIndex, array){
+			acc = incrementAcc(acc, item);
+
+			if (itemIndex === array.length -1){
+				return sortKeysByValue(acc);
+			}
+			return acc;
+		},
+		initialValue: {},
+		metricSuffix: 'List',
+	},
 	'top': {
 		fn: function (acc, item, itemIndex, array){
 			acc = incrementAcc(acc, item);
 			//return the total count if we arrived at the last element
 			if (itemIndex === array.length -1){
-				var descendingOrder = Object.keys(acc).sort(function(keyA, keyB){
-					return acc[keyB] -acc[keyA]
-				});
-				return descendingOrder[0];
+				return sortKeysByValue(acc)[0];
 			}
 			return acc;
 		},
 		initialValue: {},
 		metricPrefix: "Top"
 	}
-
-
-
 }
 
 var rgbToHex = function (rgbStr){
@@ -163,7 +175,7 @@ LayoutStats.addMetric({
 		var firstFont = fontFamilies.split(",")[0];
 		return {key: firstFont.toLowerCase(), value: node.textContent.length};
 	},
-	reduce: ['unique','uniquecount','top']
+	reduce: ['unique','uniquecount','uniquekeylist', 'top']
 });
 
 LayoutStats.addMetric({
