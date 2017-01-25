@@ -139,6 +139,23 @@ var reducers = {
 		},
 		initialValue: {},
 		metricPrefix: "Top"
+	},
+	'average': {
+		fn: function (acc, item, itemIndex, array){
+			acc = incrementAcc(acc, item);
+			//return the total count if we arrived at the last element
+			if (itemIndex === array.length -1){
+				var avg = Object.keys(acc).reduce(function(avg,key){
+					avg.sum += (parseInt(key,10) * acc[key]);
+					avg.amount += acc[key]
+					return avg
+				},{sum: 0,amount:0});
+				return avg.sum/avg.amount;
+			}
+			return acc;
+		},
+		initialValue: {},
+		metricPrefix: "Average"
 	}
 }
 
@@ -216,7 +233,7 @@ LayoutStats.addMetric({
 		 fontSize = Math.round(parseInt(fontSize, 10)) + 'px';
 		return {key: fontSize, value: node.textContent.length};
 	},
-	reduce: ['unique','uniquecount','top']
+	reduce: ['unique','uniquecount','top','average']
 });
 
 LayoutStats.addMetric({
