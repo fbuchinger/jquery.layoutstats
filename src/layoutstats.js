@@ -197,6 +197,26 @@ LayoutStats.addMetric({
 
 LayoutStats.addMetric({
 	group: "text",
+	name: "RelativeLineHeight",
+	value: function (node){
+		var textStyle = getComputedStyle(node.parentNode);
+		var lineHeight = parseInt(textStyle.lineHeight,10);
+		var fontSize= parseInt(textStyle.fontSize,10);
+		if (!(isNaN(lineHeight) || isNaN(fontSize))){
+			var relativeLineHeight = (lineHeight / fontSize).toFixed(2) + 'px';
+			return {key: relativeLineHeight, value: node.textContent.length};
+		}
+		else {
+			// use browser default if we cannot determine line height
+			// see https://developer.mozilla.org/de/docs/Web/CSS/line-height#Values
+			return {key: 1.2, value: node.textContent.length}
+		}
+	},
+	reduce: ['average']
+});
+
+LayoutStats.addMetric({
+	group: "text",
 	name: "FontStyle",
 	value: function (node){
 		var css = getComputedStyle(node.parentNode); //$textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
