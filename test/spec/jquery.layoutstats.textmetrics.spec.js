@@ -68,12 +68,12 @@
 		var topPropertyTests = [
 			{
 				node: '<div style="font-family: Arial, sans-serif; font-size: 11px;">1234</div>',
-				expected: {topFont: "arial", topStyle: "arial 11px #000000", fontList: ["arial"], topSize: "11px", avgFontSize: 11, topColor: "#000000", avgRelativeLineHeight: 1},
+				expected: {topFont: "arial", topStyle: "arial 11px #000000", fontList: ["arial"], topSize: "11px", avgFontSize: 11, topColor: "#000000", avgRelativeLineHeight: 1.2},
 				assertion: 'returns the top font size/style/color/variant as well as the list of fonts and the average font size/line height used in an html document'
 			},
 			{
 				node: '<div style="font-family: Arial, sans-serif; font-size: 11px;"><small style="font-family: serif; font-size: 7px;line-height:21px;">1</small><b>234</b></div>',
-				expected: {topFont: "arial", topStyle: "arial 11px #000000 bold", fontList: ["arial","serif"],topSize: "11px", avgFontSize: 10, avgRelativeLineHeight: 1.5, topColor: "#000000"},
+				expected: {topFont: "arial", topStyle: "arial 11px #000000 bold", fontList: ["arial","serif"],topSize: "11px", avgFontSize: 10, avgRelativeLineHeight: 1.65, topColor: "#000000"},
 				assertion: 'uses inherited styles for its calculations'
 			},
 		];

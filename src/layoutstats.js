@@ -5,7 +5,7 @@
 	}
 
 
-	function LayoutStats (){
+	window.LayoutStats = function (){
 		var self = this;
 
 		this.metrics = this.constructor.metrics;
@@ -146,7 +146,7 @@ var reducers = {
 			//return the total count if we arrived at the last element
 			if (itemIndex === array.length -1){
 				var avg = Object.keys(acc).reduce(function(avg,key){
-					avg.sum += (parseInt(key,10) * acc[key]);
+					avg.sum += (parseFloat(key,10) * acc[key]);
 					avg.amount += acc[key]
 					return avg
 				},{sum: 0,amount:0});
@@ -158,6 +158,8 @@ var reducers = {
 		metricPrefix: "Average"
 	}
 }
+
+LayoutStats.reducers = reducers;
 
 var rgbToHex = function (rgbStr){
 
