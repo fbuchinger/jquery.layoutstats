@@ -32,6 +32,7 @@
 		}
 
 
+
 		this.measure = function (node, options){
 			var nodes = self._getVisibleTextNodes(node);
 			 var measurements = {};
@@ -53,10 +54,10 @@
 					 var metricReducers = (Array.isArray(metric.reduce) ? metric.reduce : [metric.reduce]);
 
 					 metricReducers.forEach(function (metricReducer) {
-						 var reducer = (reducers[metricReducer] ? reducers[metricReducer] : metricReducer);
+						 var reducer = (LayoutStats.getReducer(metricReducer) ? LayoutStats.getReducer(metricReducer) : metricReducer);
 						 //initialValue is an object property -> passed by reference, we need to clone it for a "clean" copy
-						 var clonedInitial = JSON.parse(JSON.stringify(reducer.initialValue));
-						 var reducedValue = value.reduce(reducer.fn, clonedInitial);
+						 //var clonedInitial = JSON.parse(JSON.stringify(reducer.initialValue));
+						 var reducedValue = value.reduce(reducer.fn, reducer.initialValue);
 						 var reduceKey = metric.group + (reducer.metricPrefix || '') + key + (reducer.metricSuffix || '');
 						 measurements[reduceKey] = reducedValue;
 					 });
@@ -176,6 +177,21 @@ var reducers = {
 }
 
 LayoutStats.reducers = reducers;
+
+LayoutStats.getReducer = function (reducerName){
+	if (this.reducers[reducerName]){
+		var reducer = this.reducers[reducerName];
+		// Hack to prevent overwriting the initialValue object in the reduce function
+		//TODO: create a Reducer class with a .getInitialValue method
+		if (reducerName === "sum"){
+			reducer.initialValue = 0;
+		}
+		else {
+			reducer.initialValue = {};
+		}
+		return reducer;
+	}
+}
 
 var rgbToHex = function (rgbStr){
 
@@ -316,7 +332,7 @@ LayoutStats.addMetric({
 	value: function (img){
 		return {key: img.width + ' x ' + img.height, value: 1};
 	},
-	reduce: ['unique','uniquecount','top','sum']
+	reduce: ['unique','uniquecount','top']
 });
 
 
