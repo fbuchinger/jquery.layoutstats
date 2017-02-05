@@ -37,7 +37,17 @@
 			 var measurements = {};
 			 self.metrics.forEach(function (metric) {
 				 var key = metric.name;
-				 var value = nodes.map(metric.value);
+				 var value;
+
+				 if (metric.selector){
+					 var selectedItems = selectors[metric.selector](document);
+					 value = Array.prototype.map.call(selectedItems,metric.value);
+				 }
+				 else {
+					 value = nodes.map(metric.value);
+				 }
+
+
 				 if (metric.reduce) {
 
 					 var metricReducers = (Array.isArray(metric.reduce) ? metric.reduce : [metric.reduce]);
@@ -84,6 +94,12 @@ function sortKeysByValue (obj){
 	return Object.keys(obj).sort(function(keyA, keyB){
 		return obj[keyB] - obj[keyA];
 	});
+}
+
+var selectors = {
+	'images': function (document){
+		return document.images;
+	}
 }
 
 var reducers = {
@@ -281,6 +297,26 @@ LayoutStats.addMetric({
 		},
 		initialValue: ''
 	}
+});
+
+LayoutStats.addMetric({
+	group:"image",
+	selector: "images",
+	name: "Area",
+	value: function (img){
+		return img.width * img.height;
+	},
+	reduce: 'sum'
+});
+
+LayoutStats.addMetric({
+	group:"image",
+	selector: "images",
+	name: "Dimensions",
+	value: function (img){
+		return {key: img.width + ' x ' + img.height, value: 1};
+	},
+	reduce: ['unique','uniquecount','top','sum']
 });
 
 
