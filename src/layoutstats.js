@@ -99,7 +99,10 @@ function sortKeysByValue (obj){
 
 var selectors = {
 	'images': function (document){
-		return document.images;
+		//filter all images greater 50x50px;
+		return Array.prototype.filter.call(document.images,function(img){
+			return img.width > 50 && img.height > 50;
+		})
 	}
 }
 
@@ -332,7 +335,17 @@ LayoutStats.addMetric({
 	value: function (img){
 		return {key: img.width + ' x ' + img.height, value: 1};
 	},
-	reduce: ['unique','uniquecount','top']
+	reduce: ['unique','uniquecount','uniquekeylist','top']
+});
+
+LayoutStats.addMetric({
+	group:"image",
+	selector: "images",
+	name: "Count",
+	value: function (img){
+		return 1;
+	},
+	reduce: ['sum']
 });
 
 
