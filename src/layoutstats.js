@@ -32,21 +32,30 @@
 		}
 
 
+
 		this.measure = function (node, options){
 			var nodes = self._getVisibleTextNodes(node);
 			 var measurements = {};
 			 self.metrics.forEach(function (metric) {
 				 var key = metric.name;
-				 var value = nodes.map(metric.value);
+				 var value;
+
+				 if (metric.selector){
+					 var selectedItems = selectors[metric.selector](document);
+					 value = Array.prototype.map.call(selectedItems,metric.value);
+				 }
+				 else {
+					 value = nodes.map(metric.value);
+				 }
+
+
 				 if (metric.reduce) {
 
 					 var metricReducers = (Array.isArray(metric.reduce) ? metric.reduce : [metric.reduce]);
 
 					 metricReducers.forEach(function (metricReducer) {
-						 var reducer = (reducers[metricReducer] ? reducers[metricReducer] : metricReducer);
-						 //initialValue is an object property -> passed by reference, we need to clone it for a "clean" copy
-						 var clonedInitial = JSON.parse(JSON.stringify(reducer.initialValue));
-						 var reducedValue = value.reduce(reducer.fn, clonedInitial);
+						 var reducer = (LayoutStats.getReducer(metricReducer) ? LayoutStats.getReducer(metricReducer) : metricReducer);
+						 var reducedValue = value.reduce(reducer.fn, reducer.initialValue());
 						 var reduceKey = metric.group + (reducer.metricPrefix || '') + key + (reducer.metricSuffix || '');
 						 measurements[reduceKey] = reducedValue;
 					 });
@@ -86,19 +95,32 @@ function sortKeysByValue (obj){
 	});
 }
 
+var selectors = {
+	'images': function (document){
+		//filter all images greater 50x50px;
+		return Array.prototype.filter.call(document.images,function(img){
+			return img.width > 50 && img.height > 50;
+		})
+	}
+}
+
+function emptyObject (){
+	return {}
+}
+
 var reducers = {
 	'sum': {
 		fn: function (acc, item){
 			return acc + item;
 		},
-		initialValue: 0
+		initialValue: function(){return 0}
 	},
 	'unique': {
 		fn: function (acc, item){
 			acc = incrementAcc(acc, item);
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: 'Unique',
 		metricSuffix: 's'
 	},
@@ -112,7 +134,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: 'Unique',
 		metricSuffix: 'Count'
 	},
@@ -125,7 +147,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricSuffix: 'List',
 	},
 	'top': {
@@ -137,7 +159,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: "Top"
 	},
 	'average': {
@@ -154,12 +176,19 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: "Average"
 	}
 }
 
 LayoutStats.reducers = reducers;
+
+LayoutStats.getReducer = function (reducerName){
+	if (this.reducers[reducerName]){
+		var reducer = this.reducers[reducerName];
+		return reducer;
+	}
+}
 
 var rgbToHex = function (rgbStr){
 
@@ -279,8 +308,40 @@ LayoutStats.addMetric({
 		fn: function (acc, item){
 			return (acc + item).slice(0,1000);
 		},
-		initialValue: ''
+		initialValue: function (){
+			return '';
+		}
 	}
+});
+
+LayoutStats.addMetric({
+	group:"image",
+	selector: "images",
+	name: "Area",
+	value: function (img){
+		return img.width * img.height;
+	},
+	reduce: 'sum'
+});
+
+LayoutStats.addMetric({
+	group:"image",
+	selector: "images",
+	name: "Dimensions",
+	value: function (img){
+		return {key: img.width + ' x ' + img.height, value: 1};
+	},
+	reduce: ['unique','uniquecount','uniquekeylist','top']
+});
+
+LayoutStats.addMetric({
+	group:"image",
+	selector: "images",
+	name: "Count",
+	value: function (img){
+		return 1;
+	},
+	reduce: ['sum']
 });
 
 
