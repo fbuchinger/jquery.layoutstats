@@ -55,9 +55,7 @@
 
 					 metricReducers.forEach(function (metricReducer) {
 						 var reducer = (LayoutStats.getReducer(metricReducer) ? LayoutStats.getReducer(metricReducer) : metricReducer);
-						 //initialValue is an object property -> passed by reference, we need to clone it for a "clean" copy
-						 //var clonedInitial = JSON.parse(JSON.stringify(reducer.initialValue));
-						 var reducedValue = value.reduce(reducer.fn, reducer.initialValue);
+						 var reducedValue = value.reduce(reducer.fn, reducer.initialValue());
 						 var reduceKey = metric.group + (reducer.metricPrefix || '') + key + (reducer.metricSuffix || '');
 						 measurements[reduceKey] = reducedValue;
 					 });
@@ -106,19 +104,23 @@ var selectors = {
 	}
 }
 
+function emptyObject (){
+	return {}
+}
+
 var reducers = {
 	'sum': {
 		fn: function (acc, item){
 			return acc + item;
 		},
-		initialValue: 0
+		initialValue: function(){return 0}
 	},
 	'unique': {
 		fn: function (acc, item){
 			acc = incrementAcc(acc, item);
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: 'Unique',
 		metricSuffix: 's'
 	},
@@ -132,7 +134,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: 'Unique',
 		metricSuffix: 'Count'
 	},
@@ -145,7 +147,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricSuffix: 'List',
 	},
 	'top': {
@@ -157,7 +159,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: "Top"
 	},
 	'average': {
@@ -174,7 +176,7 @@ var reducers = {
 			}
 			return acc;
 		},
-		initialValue: {},
+		initialValue: emptyObject,
 		metricPrefix: "Average"
 	}
 }
@@ -184,14 +186,6 @@ LayoutStats.reducers = reducers;
 LayoutStats.getReducer = function (reducerName){
 	if (this.reducers[reducerName]){
 		var reducer = this.reducers[reducerName];
-		// Hack to prevent overwriting the initialValue object in the reduce function
-		//TODO: create a Reducer class with a .getInitialValue method
-		if (reducerName === "sum"){
-			reducer.initialValue = 0;
-		}
-		else {
-			reducer.initialValue = {};
-		}
 		return reducer;
 	}
 }
@@ -314,7 +308,9 @@ LayoutStats.addMetric({
 		fn: function (acc, item){
 			return (acc + item).slice(0,1000);
 		},
-		initialValue: ''
+		initialValue: function (){
+			return '';
+		}
 	}
 });
 

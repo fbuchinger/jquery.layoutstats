@@ -27,8 +27,6 @@
 		assert.equal(ls.imageArea,45000,'measures the dimension of a single image with width and height attributes' );
 		ls = injectAndGetLayoutStats('<img style="width:150px;height:300px;" src="'+png1px+'">');
 		assert.equal(ls.imageArea,45000,'measures the dimension of a single image with width and height set by css' );
-		/*ls = injectAndGetLayoutStats('<img src="'+png1px+'"><img src="'+png1px+'">');
-		assert.equal(ls.imageArea,2,'measures the dimension of multiple images without dimension information' );*/
 	});
 
 })( window, QUnit );
