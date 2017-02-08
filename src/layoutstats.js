@@ -1,53 +1,28 @@
 ;( function( window, document, undefined ) {
 
-	function _isVisible(elem){
-		return  !(elem.offsetWidth === 0 && elem.offsetHeight === 0);
-	}
 
 
-	window.LayoutStats = function (){
+
+	window.LayoutStats = function (node, options){
 		var self = this;
+		var node = node || document.body;
 
 		this.metrics = this.constructor.metrics;
 
-		this._getVisibleTextNodes = function (element){
-			var walker = document.createTreeWalker(
-				element,
-				NodeFilter.SHOW_TEXT,
-				null,
-				false
-			);
-
-			var node;
-			var textNodes = [];
-
-			while(node = walker.nextNode()) {
-				var justContainsWhitespace = (node.nodeValue.trim().length === 0);
-				var parentNodeVisible =  (node.parentNode && _isVisible(node.parentNode));
-				if (!justContainsWhitespace & parentNodeVisible){
-					textNodes.push(node);
-				}
-			}
-			return textNodes;
-		}
-
-
 
 		this.measure = function (node, options){
-			var nodes = self._getVisibleTextNodes(node);
 			 var measurements = {};
 			 self.metrics.forEach(function (metric) {
 				 var key = metric.name;
 				 var value;
 
 				 if (metric.selector){
-					 var selectedItems = selectors[metric.selector](document);
+					 var selectedItems = selectors[metric.selector](node);
 					 value = Array.prototype.map.call(selectedItems,metric.value);
 				 }
 				 else {
-					 value = nodes.map(metric.value);
+					 throw ("missing selector for metric: " + metric.name);
 				 }
-
 
 				 if (metric.reduce) {
 
@@ -96,11 +71,38 @@ function sortKeysByValue (obj){
 }
 
 var selectors = {
-	'images': function (document){
+	'images': function (element){
+		var images = element.querySelectorAll('img');
 		//filter all images greater 50x50px;
-		return Array.prototype.filter.call(document.images,function(img){
+		return Array.prototype.filter.call(images, function(img){
 			return img.width > 50 && img.height > 50;
 		})
+	},
+	'visibleTextNodes': function (element){
+
+		function _isVisible(elem){
+			return  !(elem.offsetWidth === 0 && elem.offsetHeight === 0);
+		}
+
+
+		var walker = document.createTreeWalker(
+			element,
+			NodeFilter.SHOW_TEXT,
+			null,
+			false
+		);
+
+		var node;
+		var textNodes = [];
+
+		while(node = walker.nextNode()) {
+			var justContainsWhitespace = (node.nodeValue.trim().length === 0);
+			var parentNodeVisible =  (node.parentNode && _isVisible(node.parentNode));
+			if (!justContainsWhitespace & parentNodeVisible){
+				textNodes.push(node);
+			}
+		}
+		return textNodes;
 	}
 }
 
@@ -206,9 +208,28 @@ var rgbToHex = function (rgbStr){
 
 }
 
+function getTextNodeBBox(textNode) {
+	var dims = {};
+
+	var range = document.createRange();
+	range.selectNode(textNode);
+	var rect = range.getBoundingClientRect();
+	if (rect.left && rect.right && rect.top && rect.bottom && rect.width && rect.height){
+		dims.bottom = rect.bottom;
+		dims.left = rect.left;
+		dims.right = rect.right;
+		dims.top = rect.top;
+		dims.width = rect.width;
+		dims.height = rect.height;
+	}
+	range.detach();
+	return rect;
+}
+
 LayoutStats.addMetric({
 	group: "text",
 	name: "VisibleCharCount",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		return node.textContent.length
 	},
@@ -218,10 +239,12 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "Font",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var fontFamilies = getComputedStyle(node.parentNode).fontFamily;
 		var firstFont = fontFamilies.split(",")[0];
-		return {key: firstFont.toLowerCase(), value: node.textContent.length};
+		var textBBOX = getTextNodeBBox(node);
+		return {key: firstFont.toLowerCase(), value: textBBOX.width*textBBOX.height};
 	},
 	reduce: ['unique','uniquecount','uniquekeylist', 'top']
 });
@@ -229,18 +252,22 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "RelativeLineHeight",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var textStyle = getComputedStyle(node.parentNode);
 		var lineHeight = parseInt(textStyle.lineHeight,10);
 		var fontSize= parseInt(textStyle.fontSize,10);
+		var textBBOX = getTextNodeBBox(node);
+		var bboxArea =  textBBOX.width*textBBOX.height;
 		if (!(isNaN(lineHeight) || isNaN(fontSize))){
+
 			var relativeLineHeight = (lineHeight / fontSize).toFixed(2) + 'px';
-			return {key: relativeLineHeight, value: node.textContent.length};
+			return {key: relativeLineHeight, value:bboxArea};
 		}
 		else {
 			// use browser default if we cannot determine line height
 			// see https://developer.mozilla.org/de/docs/Web/CSS/line-height#Values
-			return {key: 1.2, value: node.textContent.length}
+			return {key: 1.2, value: bboxArea}
 		}
 	},
 	reduce: ['average']
@@ -249,6 +276,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "FontStyle",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var css = getComputedStyle(node.parentNode); //$textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
 		var styleParams = JSON.parse(JSON.stringify(css));
@@ -271,7 +299,9 @@ LayoutStats.addMetric({
 			nodeStyle.push(miscProperties);
 		}
 
-		return {key: nodeStyle.join(' '), value: node.textContent.length};
+		var textBBOX = getTextNodeBBox(node);
+		var bboxArea =  textBBOX.width*textBBOX.height;
+		return {key: nodeStyle.join(' '), value: bboxArea};
 	},
 	reduce: ['unique','uniquecount','top']
 });
@@ -279,21 +309,28 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "FontSize",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var fontSize = getComputedStyle(node.parentNode).fontSize;
 		 fontSize = Math.round(parseInt(fontSize, 10)) + 'px';
-		return {key: fontSize, value: node.textContent.length};
+		var textBBOX = getTextNodeBBox(node);
+		var bboxArea =  textBBOX.width*textBBOX.height;
+		return {key: fontSize, value: bboxArea};
 	},
 	reduce: ['unique','uniquecount','top','average']
 });
 
+
 LayoutStats.addMetric({
 	group: "text",
 	name: "FontColor",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var color = getComputedStyle(node.parentNode).color;
 		var hexColor =  rgbToHex(color);
-		return {key: hexColor, value: node.textContent.length}
+		var textBBOX = getTextNodeBBox(node);
+		var bboxArea =  textBBOX.width*textBBOX.height;
+		return {key: hexColor, value: bboxArea}
 	},
 	reduce: ['unique','uniquecount','top']
 });
@@ -301,6 +338,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "First1000Chars",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		return node.textContent;
 	},
@@ -313,6 +351,68 @@ LayoutStats.addMetric({
 		}
 	}
 });
+
+//TODO: experimental selectors - need additional performance testing
+var maximum = function ( max, cur ){ return  Math.max( max, cur )};
+var minimum = function ( min, cur ) { return Math.min( min, cur )};
+var mapProperty = function (obj, property){
+	return function (obj){
+		return obj[property];
+	}
+}
+
+LayoutStats.addMetric({
+	group: "text",
+	name: "BBoxWidth",
+	selector: 'visibleTextNodes',
+	value: function (node){
+		var textBBOX = getTextNodeBBox(node);
+		if (textBBOX.right > 0 && textBBOX.right < window.innerWidth && textBBOX.left > 0){
+			if (textBBOX.left < 200 || textBBOX.right > 1500){
+				console.log(node.textContent);
+			}
+			return {right: textBBOX.right, left: textBBOX.left}
+
+		}
+	},
+	reduce: {
+		fn: function (acc, item, itemIndex, array){
+			if (itemIndex === array.length -1){
+				array = array.filter(function(bbox){
+					return bbox !== undefined;
+				});
+				var maxHOffset = array.map(mapProperty(item,'right')).reduce( maximum, -Infinity );
+				var minHOffset = array.map(mapProperty(item,'left') ).reduce( minimum, Infinity );
+				debugger;
+				return maxHOffset - minHOffset;
+			}
+		},
+		initialValue: function (){
+			return 0;
+		}
+	}
+});
+
+LayoutStats.addMetric({
+	group: "text",
+	name: "BBoxHeight",
+	selector: 'visibleTextNodes',
+	value: function (node){
+		return 1;
+	},
+	reduce: {
+		fn: function (acc, item, itemIndex, array){
+			if (itemIndex === array.length -1){
+				return document.body.offsetHeight;
+			}
+		},
+		initialValue: function (){
+			return 0;
+		}
+	}
+});
+
+
 
 LayoutStats.addMetric({
 	group:"image",

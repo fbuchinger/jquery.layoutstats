@@ -72,7 +72,7 @@
 				assertion: 'returns the top font size/style/color/variant as well as the list of fonts and the average font size/line height used in an html document'
 			},
 			{
-				node: '<div style="font-family: Arial, sans-serif; font-size: 11px;"><small style="font-family: serif; font-size: 7px;line-height:21px;">1</small><b>234</b></div>',
+				node: '<div style="font-family: Arial, sans-serif; font-size: 21px;"><small style="font-family: serif; font-size: 7px;">1</small><b>1</b></div>',
 				expected: {topFont: "arial", topStyle: "arial 11px #000000 bold", fontList: ["arial","serif"],topSize: "11px", avgFontSize: 10, avgRelativeLineHeight: 1.65, topColor: "#000000"},
 				assertion: 'uses inherited styles for its calculations'
 			},
