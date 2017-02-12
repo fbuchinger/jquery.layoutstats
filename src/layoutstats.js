@@ -97,7 +97,7 @@ var selectors = {
 
 		while(node = walker.nextNode()) {
 			var justContainsWhitespace = (node.nodeValue.trim().length === 0);
-			var parentNodeVisible =  (node.parentNode && _isVisible(node.parentNode));
+			var parentNodeVisible =  (node.parentNode &&   _isVisible(node.parentNode));
 			if (!justContainsWhitespace & parentNodeVisible){
 				textNodes.push(node);
 			}
@@ -208,19 +208,43 @@ var rgbToHex = function (rgbStr){
 
 }
 
+// from: http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+function isElementVisible(el) {
+	var rect     = el.getBoundingClientRect(),
+		vWidth   = window.innerWidth || document.documentElement.clientWidth,
+		vHeight  = window.innerHeight || document.documentElement.clientHeight,
+		efp      = function (x, y) { return document.elementFromPoint(x, y) };
+
+	// Return false if it's not in the viewport
+	if (rect.right < 0 || rect.bottom < 0
+		|| rect.left > vWidth || rect.top > vHeight)
+		return false;
+
+	// Return true if the center of the bounding box is visible
+	return (el.contains(efp(rect.right - (rect.width / 2), rect.bottom - (rect.height / 2))))
+}
+
+
 function getTextNodeBBox(textNode) {
 	var dims = {};
-
 	var range = document.createRange();
 	range.selectNode(textNode);
 	var rect = range.getBoundingClientRect();
 	if (rect.left && rect.right && rect.top && rect.bottom && rect.width && rect.height){
-		dims.bottom = rect.bottom;
-		dims.left = rect.left;
-		dims.right = rect.right;
-		dims.top = rect.top;
-		dims.width = rect.width;
-		dims.height = rect.height;
+		var centerX = rect.left + rect.width/2
+		var centerY = rect.top + rect.height/2;
+		//TODO: try to detect elements that are covered by other elements
+		if (isElementVisible(textNode.parentNode)) {
+			dims.bottom = rect.bottom;
+			dims.left = rect.left;
+			dims.right = rect.right;
+			dims.top = rect.top;
+			dims.width = rect.width;
+			dims.height = rect.height;
+		}
+		else {
+			//console.log(textNode, "is out of canvas", rect);
+		}
 	}
 	range.detach();
 	return rect;
@@ -368,9 +392,6 @@ LayoutStats.addMetric({
 	value: function (node){
 		var textBBOX = getTextNodeBBox(node);
 		if (textBBOX.right > 0 && textBBOX.right < window.innerWidth && textBBOX.left > 0){
-			if (textBBOX.left < 200 || textBBOX.right > 1500){
-				console.log(node.textContent);
-			}
 			return {right: textBBOX.right, left: textBBOX.left}
 
 		}
@@ -383,7 +404,6 @@ LayoutStats.addMetric({
 				});
 				var maxHOffset = array.map(mapProperty(item,'right')).reduce( maximum, -Infinity );
 				var minHOffset = array.map(mapProperty(item,'left') ).reduce( minimum, Infinity );
-				debugger;
 				return maxHOffset - minHOffset;
 			}
 		},
