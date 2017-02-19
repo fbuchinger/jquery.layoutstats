@@ -18,6 +18,7 @@
 
 				 if (metric.selector){
 					 var selectedItems = selectors[metric.selector](node);
+					 selectedItems = (Array.isArray(selectedItems) ? selectedItems : [selectedItems]);
 					 value = Array.prototype.map.call(selectedItems,metric.value);
 				 }
 				 else {
@@ -37,6 +38,10 @@
 				 }
 				 //no reduce func
 				 else {
+					 //auto-reduce value array if it only consists of one non-object entry
+					 if (value.length === 1 && value[0] !== Object(value[0])){
+						 value = value[0];
+					 }
 					 measurements[ metric.group + key] = value;
 				 }
 
