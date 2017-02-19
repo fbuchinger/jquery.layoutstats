@@ -71,6 +71,9 @@ function sortKeysByValue (obj){
 }
 
 var selectors = {
+	'rootElement': function (element){
+		return element;
+	},
 	'images': function (element){
 		var images = element.querySelectorAll('img');
 		//filter all images greater 50x50px;
@@ -224,6 +227,15 @@ function isElementVisible(el) {
 	return (el.contains(efp(rect.right - (rect.width / 2), rect.bottom - (rect.height / 2))))
 }
 
+function isFullyShownInParent(nodeRect, parentNode){
+	var parentRect = parentNode.getBoundingClientRect();
+	return (
+		parentRect.right >= nodeRect.right &&
+		parentRect.left <= nodeRect.left &&
+		parentRect.top <= nodeRect.top &&
+		parentRect.bottom >= nodeRect.bottom
+	)
+}
 
 function getTextNodeBBox(textNode) {
 	var dims = {};
@@ -233,21 +245,22 @@ function getTextNodeBBox(textNode) {
 	if (rect.left && rect.right && rect.top && rect.bottom && rect.width && rect.height){
 		var centerX = rect.left + rect.width/2
 		var centerY = rect.top + rect.height/2;
-		//TODO: try to detect elements that are covered by other elements
-		if (isElementVisible(textNode.parentNode)) {
+		//check that parent Node of text node is visible and that the text node is fully shown in the parent
+		if (isElementVisible(textNode.parentNode) && isFullyShownInParent(rect, textNode.parentNode)) {
 			dims.bottom = rect.bottom;
 			dims.left = rect.left;
 			dims.right = rect.right;
 			dims.top = rect.top;
 			dims.width = rect.width;
 			dims.height = rect.height;
+
 		}
 		else {
 			//console.log(textNode, "is out of canvas", rect);
 		}
 	}
+	return dims;
 	range.detach();
-	return rect;
 }
 
 LayoutStats.addMetric({
@@ -404,7 +417,7 @@ LayoutStats.addMetric({
 				});
 				var maxHOffset = array.map(mapProperty(item,'right')).reduce( maximum, -Infinity );
 				var minHOffset = array.map(mapProperty(item,'left') ).reduce( minimum, Infinity );
-				return maxHOffset - minHOffset;
+				return Math.round(maxHOffset) - Math.round(minHOffset);
 			}
 		},
 		initialValue: function (){
@@ -414,21 +427,11 @@ LayoutStats.addMetric({
 });
 
 LayoutStats.addMetric({
-	group: "text",
+	group: "root",
 	name: "BBoxHeight",
-	selector: 'visibleTextNodes',
+	selector: 'rootElement',
 	value: function (node){
-		return 1;
-	},
-	reduce: {
-		fn: function (acc, item, itemIndex, array){
-			if (itemIndex === array.length -1){
-				return document.body.offsetHeight;
-			}
-		},
-		initialValue: function (){
-			return 0;
-		}
+		return node.scrollHeight;
 	}
 });
 
