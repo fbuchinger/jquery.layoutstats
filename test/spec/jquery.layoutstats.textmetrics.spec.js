@@ -73,7 +73,7 @@
 			},
 			{
 				node: '<div style="font-family: Arial, sans-serif; font-size: 21px;"><small style="font-family: serif; font-size: 7px;">1</small><b>1</b></div>',
-				expected: {topFont: "arial", topStyle: "arial 11px #000000 bold", fontList: ["arial","serif"],topSize: "11px", avgFontSize: 10, avgRelativeLineHeight: 1.65, topColor: "#000000"},
+				expected: {topFont: "arial", topStyle: "arial 21px #000000 bold", fontList: ["arial","serif"],topSize: "21px", avgFontSize: 19.508918820531488, avgRelativeLineHeight: 1.2, topColor: "#000000"},
 				assertion: 'uses inherited styles for its calculations'
 			},
 		];
