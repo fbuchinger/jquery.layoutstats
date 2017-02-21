@@ -394,6 +394,39 @@ LayoutStats.addMetric({
 	}
 });
 
+LayoutStats.addMetric({
+	group: "text",
+	name: "LeftOffset",
+	selector: 'visibleTextNodes',
+	value: function (node){
+		var textBBOX = getTextNodeBBox(node);
+		if (textBBOX.left > 0 && textBBOX.right < window.innerWidth){
+			var bboxArea =  textBBOX.width*textBBOX.height;
+			//round offset to 100pixel steps for easier comparison
+			//should we also include images in this metric?
+			var leftOffset = Math.round(textBBOX.left/100)*100;
+			return {key: leftOffset, value: bboxArea}
+		}
+	},
+	reduce: ['unique','uniquecount','top']
+});
+
+LayoutStats.addMetric({
+	group:"text",
+	selector: 'visibleTextNodes',
+	name: "Area",
+	value: function (node){
+		var textBBOX = getTextNodeBBox(node);
+		if (textBBOX.width > 0 && textBBOX.height > 0 && textBBOX.right < window.innerWidth){
+			return textBBOX.width*textBBOX.height;
+		}
+		else {
+			return 0
+		}
+	},
+	reduce: 'sum'
+});
+
 //TODO: experimental selectors - need additional performance testing
 var maximum = function ( max, cur ){ return  Math.max( max, cur )};
 var minimum = function ( min, cur ) { return Math.min( min, cur )};
