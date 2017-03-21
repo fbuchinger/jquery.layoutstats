@@ -384,7 +384,18 @@ LayoutStats.addMetric({
 	selector: "nodesWithClassAttribute",
 	name: "UsedCSSClassAttributes",
 	value: function (node){
-		return {key: node.classList.toString().trim(), value: 1};
+		// borrowed from https://www.npmjs.com/package/string-hash (Public Domain)
+		function hash(str) {
+			var hash = 5381,
+				i    = str.length;
+
+			while(i) {
+				hash = (hash * 33) ^ str.charCodeAt(--i);
+			}
+			return hash >>> 0;
+		}
+		// return css classlist as a hash to decrease the size of the JSON metric
+		return {key: hash(node.classList.toString().trim()).toString(36), value: 1};
 	},
 	reduce: ['uniquekeylist']
 });
