@@ -22,6 +22,10 @@
 	QUnit.test("measures the css class attributes used by child nodes. It ", function (assert) {
 		var ls = injectAndGetLayoutStats('<div class="foo1 foo2 foo3"></div><span class="foo1 foo2 foo3"></span><div class="bar1 bar2 bar2"></div>');
 		assert.deepEqual(ls.nodeUsedCSSClassAttributesList.sort(),["1bd623p", "c8zwxf"].sort(),"creates an array of unique hashed class list combinations");
+		var ls = injectAndGetLayoutStats('<div class="foo1 foo2 foo3"></div><span class="foo1    foo2 			foo3"></span>');
+		assert.deepEqual(ls.nodeUsedCSSClassAttributesList.sort(),["c8zwxf"],"ignores insignificant whitespace between the classnames when building the hash");
+		var ls = injectAndGetLayoutStats('<div class="     "></div><span class=""></span>');
+		assert.deepEqual(ls.nodeUsedCSSClassAttributesList.sort(),[],"ignores empty class attributes");
 	});
 
 })( window, QUnit );

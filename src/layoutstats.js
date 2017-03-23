@@ -394,8 +394,12 @@ LayoutStats.addMetric({
 			}
 			return hash >>> 0;
 		}
-		// return css classlist as a hash to decrease the size of the JSON metric
-		return {key: hash(node.classList.toString().trim()).toString(36), value: 1};
+
+		var cssClassList = Array.prototype.join.call(node.classList," ");
+		// return css classlist as a hash to decrease the size of the JSON payload
+		if (cssClassList.length > 0) {
+			return {key: hash(cssClassList).toString(36), value: 1};
+		}
 	},
 	reduce: ['uniquekeylist']
 });
