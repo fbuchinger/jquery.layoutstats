@@ -34,14 +34,13 @@
 
 
 		this.measure = function (node, options){
-			var nodes = self._getVisibleTextNodes(node);
 			 var measurements = {};
 			 self.metrics.forEach(function (metric) {
 				 var key = metric.name;
 				 var value;
 
 				 if (metric.selector){
-					 var selectedItems = selectors[metric.selector](document);
+					 var selectedItems = selectors[metric.selector](node);
 					 value = Array.prototype.map.call(selectedItems,metric.value);
 				 }
 				 else {
@@ -96,11 +95,40 @@ function sortKeysByValue (obj){
 }
 
 var selectors = {
-	'images': function (document){
+	'images': function (node){
 		//filter all images greater 50x50px;
-		return Array.prototype.filter.call(document.images,function(img){
+		return Array.prototype.filter.call(node.querySelectorAll('img'),function(img){
 			return img.width > 50 && img.height > 50;
 		})
+	},
+	'visibleTextNodes': function (element){
+
+		function _isVisible(elem){
+			return  !(elem.offsetWidth === 0 && elem.offsetHeight === 0);
+		}
+
+
+		var walker = document.createTreeWalker(
+			element,
+			NodeFilter.SHOW_TEXT,
+			null,
+			false
+		);
+
+		var node;
+		var textNodes = [];
+
+		while(node = walker.nextNode()) {
+			var justContainsWhitespace = (node.nodeValue.trim().length === 0);
+			var parentNodeVisible =  (node.parentNode &&   _isVisible(node.parentNode));
+			if (!justContainsWhitespace & parentNodeVisible){
+				textNodes.push(node);
+			}
+		}
+		return textNodes;
+	},
+	'nodesWithClassAttribute': function (node){
+		return node.querySelectorAll('*[class]');
 	}
 }
 
@@ -209,6 +237,7 @@ var rgbToHex = function (rgbStr){
 LayoutStats.addMetric({
 	group: "text",
 	name: "VisibleCharCount",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		return node.textContent.length
 	},
@@ -218,6 +247,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "Font",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var fontFamilies = getComputedStyle(node.parentNode).fontFamily;
 		var firstFont = fontFamilies.split(",")[0];
@@ -229,6 +259,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "RelativeLineHeight",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var textStyle = getComputedStyle(node.parentNode);
 		var lineHeight = parseInt(textStyle.lineHeight,10);
@@ -249,6 +280,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "FontStyle",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var css = getComputedStyle(node.parentNode); //$textParent.css(['fontFamily','fontSize','fontWeight','fontVariant','fontStyle','color']);
 		var styleParams = JSON.parse(JSON.stringify(css));
@@ -279,6 +311,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "FontSize",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var fontSize = getComputedStyle(node.parentNode).fontSize;
 		 fontSize = Math.round(parseInt(fontSize, 10)) + 'px';
@@ -290,6 +323,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "FontColor",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		var color = getComputedStyle(node.parentNode).color;
 		var hexColor =  rgbToHex(color);
@@ -301,6 +335,7 @@ LayoutStats.addMetric({
 LayoutStats.addMetric({
 	group: "text",
 	name: "First1000Chars",
+	selector: 'visibleTextNodes',
 	value: function (node){
 		return node.textContent;
 	},
@@ -342,6 +377,31 @@ LayoutStats.addMetric({
 		return 1;
 	},
 	reduce: ['sum']
+});
+
+LayoutStats.addMetric({
+	group:"node",
+	selector: "nodesWithClassAttribute",
+	name: "UsedCSSClassAttributes",
+	value: function (node){
+		// borrowed from https://www.npmjs.com/package/string-hash (Public Domain)
+		function hash(str) {
+			var hash = 5381,
+				i    = str.length;
+
+			while(i) {
+				hash = (hash * 33) ^ str.charCodeAt(--i);
+			}
+			return hash >>> 0;
+		}
+
+		var cssClassList = Array.prototype.join.call(node.classList," ");
+		// return css classlist as a hash to decrease the size of the JSON payload
+		if (cssClassList.length > 0) {
+			return {key: hash(cssClassList).toString(36), value: 1};
+		}
+	},
+	reduce: ['uniquekeylist']
 });
 
 
