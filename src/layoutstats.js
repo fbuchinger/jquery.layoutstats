@@ -4,6 +4,64 @@
 		return  !(elem.offsetWidth === 0 && elem.offsetHeight === 0);
 	}
 
+	//check if prototype.js has overwritten the map function
+	// and replace it with a polyfill
+	var polyfill = {
+		map:  function(fn) {
+			var rv = [];
+
+			for(var i=0, l=this.length; i<l; i++)
+				rv.push(fn(this[i]));
+
+			return rv;
+		},
+		filter: function(fn) {
+			var rv = [];
+
+			for(var i=0, l=this.length; i<l; i++)
+				if (fn(this[i])) rv.push(this[i]);
+
+			return rv;
+		},
+		reduce: function(callback /*, initialValue*/) {
+				'use strict';
+				if (this == null) {
+					throw new TypeError('Array.prototype.reduce called on null or undefined');
+				}
+				if (typeof callback !== 'function') {
+					throw new TypeError(callback + ' is not a function');
+				}
+				var t = Object(this), len = t.length >>> 0, k = 0, value;
+				if (arguments.length == 2) {
+					value = arguments[1];
+				} else {
+					while (k < len && !(k in t)) {
+						k++;
+					}
+					if (k >= len) {
+						throw new TypeError('Reduce of empty array with no initial value');
+					}
+					value = t[k++];
+				}
+				for (; k < len; k++) {
+					if (k in t) {
+						value = callback(value, t[k], k, t);
+					}
+				}
+				return value;
+		}
+	};
+
+
+	function isProtoOverwritten (protoFunc){
+		return protoFunc.toString().indexOf('native code') < 0
+	}
+
+
+	var map = isProtoOverwritten(Array.prototype.map) ? polyfill.map: Array.prototype.map;
+	var filter = isProtoOverwritten(Array.prototype.filter) ? polyfill.filter: Array.prototype.filter;
+	var reduce = isProtoOverwritten(Array.prototype.reduce) ? polyfill.reduce: Array.prototype.reduce;
+
 
 	window.LayoutStats = function (){
 		var self = this;
@@ -41,7 +99,7 @@
 
 				 if (metric.selector){
 					 var selectedItems = selectors[metric.selector](node);
-					 value = Array.prototype.map.call(selectedItems,metric.value);
+					 value = map.call(selectedItems,metric.value);
 				 }
 				 else {
 					 value = nodes.map(metric.value);
@@ -54,7 +112,7 @@
 
 					 metricReducers.forEach(function (metricReducer) {
 						 var reducer = (LayoutStats.getReducer(metricReducer) ? LayoutStats.getReducer(metricReducer) : metricReducer);
-						 var reducedValue = value.reduce(reducer.fn, reducer.initialValue());
+						 var reducedValue = reduce.call(value, reducer.fn, reducer.initialValue());
 						 var reduceKey = metric.group + (reducer.metricPrefix || '') + key + (reducer.metricSuffix || '');
 						 measurements[reduceKey] = reducedValue;
 					 });
@@ -97,7 +155,7 @@ function sortKeysByValue (obj){
 var selectors = {
 	'images': function (node){
 		//filter all images greater 50x50px;
-		return Array.prototype.filter.call(node.querySelectorAll('img'),function(img){
+		return filter.call(node.querySelectorAll('img'),function(img){
 			return img.width > 50 && img.height > 50;
 		})
 	},
