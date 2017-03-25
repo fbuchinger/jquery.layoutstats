@@ -23,32 +23,43 @@
 
 			return rv;
 		},
-		reduce: function(callback /*, initialValue*/) {
-				'use strict';
-				if (this == null) {
-					throw new TypeError('Array.prototype.reduce called on null or undefined');
+		// Reduce polyfill provided by polyfill.io,
+		// licensed under a MIT License - https://github.com/Financial-Times/polyfill-service/blob/master/LICENSE.md
+		reduce:  function (callback) {
+			if (this === undefined || this === null) {
+				throw new TypeError(this + ' is not an object');
+			}
+
+			if (!(callback instanceof Function)) {
+				throw new TypeError(callback + ' is not a function');
+			}
+
+			var
+				object = Object(this),
+				arraylike = object instanceof String ? object.split('') : object,
+				length = Math.max(Math.min(arraylike.length, 9007199254740991), 0) || 0,
+				index = -1,
+				previousValue;
+
+			if (1 in arguments) {
+				previousValue = arguments[1];
+			} else {
+				while (++index < length && !(index in arraylike)) {}
+
+				if (index >= length) {
+					throw new TypeError('Reduce of empty array with no initial value');
 				}
-				if (typeof callback !== 'function') {
-					throw new TypeError(callback + ' is not a function');
+
+				previousValue = arraylike[index];
+			}
+
+			while (++index < length) {
+				if (index in arraylike) {
+					previousValue = callback(previousValue, arraylike[index], index, object);
 				}
-				var t = Object(this), len = t.length >>> 0, k = 0, value;
-				if (arguments.length == 2) {
-					value = arguments[1];
-				} else {
-					while (k < len && !(k in t)) {
-						k++;
-					}
-					if (k >= len) {
-						throw new TypeError('Reduce of empty array with no initial value');
-					}
-					value = t[k++];
-				}
-				for (; k < len; k++) {
-					if (k in t) {
-						value = callback(value, t[k], k, t);
-					}
-				}
-				return value;
+			}
+
+			return previousValue;
 		}
 	};
 
@@ -253,9 +264,9 @@ var reducers = {
 			acc = incrementAcc(acc, item);
 			//return the total count if we arrived at the last element
 			if (itemIndex === array.length -1){
-				var avg = Object.keys(acc).reduce(function(avg,key){
+				var avg = reduce.call(Object.keys(acc),function(avg,key){
 					avg.sum += (parseFloat(key,10) * acc[key]);
-					avg.amount += acc[key]
+					avg.amount += acc[key];
 					return avg
 				},{sum: 0,amount:0});
 				return avg.sum/avg.amount;
