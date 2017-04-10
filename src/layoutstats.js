@@ -4,6 +4,75 @@
 		return  !(elem.offsetWidth === 0 && elem.offsetHeight === 0);
 	}
 
+	//check if prototype.js has overwritten the map function
+	// and replace it with a polyfill
+	var polyfill = {
+		map:  function(fn) {
+			var rv = [];
+
+			for(var i=0, l=this.length; i<l; i++)
+				rv.push(fn(this[i]));
+
+			return rv;
+		},
+		filter: function(fn) {
+			var rv = [];
+
+			for(var i=0, l=this.length; i<l; i++)
+				if (fn(this[i])) rv.push(this[i]);
+
+			return rv;
+		},
+		// Reduce polyfill provided by polyfill.io,
+		// licensed under a MIT License - https://github.com/Financial-Times/polyfill-service/blob/master/LICENSE.md
+		reduce:  function (callback) {
+			if (this === undefined || this === null) {
+				throw new TypeError(this + ' is not an object');
+			}
+
+			if (!(callback instanceof Function)) {
+				throw new TypeError(callback + ' is not a function');
+			}
+
+			var
+				object = Object(this),
+				arraylike = object instanceof String ? object.split('') : object,
+				length = Math.max(Math.min(arraylike.length, 9007199254740991), 0) || 0,
+				index = -1,
+				previousValue;
+
+			if (1 in arguments) {
+				previousValue = arguments[1];
+			} else {
+				while (++index < length && !(index in arraylike)) {}
+
+				if (index >= length) {
+					throw new TypeError('Reduce of empty array with no initial value');
+				}
+
+				previousValue = arraylike[index];
+			}
+
+			while (++index < length) {
+				if (index in arraylike) {
+					previousValue = callback(previousValue, arraylike[index], index, object);
+				}
+			}
+
+			return previousValue;
+		}
+	};
+
+
+	function isProtoOverwritten (protoFunc){
+		return protoFunc.toString().indexOf('native code') < 0
+	}
+
+
+	var map = isProtoOverwritten(Array.prototype.map) ? polyfill.map: Array.prototype.map;
+	var filter = isProtoOverwritten(Array.prototype.filter) ? polyfill.filter: Array.prototype.filter;
+	var reduce = isProtoOverwritten(Array.prototype.reduce) ? polyfill.reduce: Array.prototype.reduce;
+
 
 	window.LayoutStats = function (){
 		var self = this;
@@ -41,7 +110,7 @@
 
 				 if (metric.selector){
 					 var selectedItems = selectors[metric.selector](node);
-					 value = Array.prototype.map.call(selectedItems,metric.value);
+					 value = map.call(selectedItems,metric.value);
 				 }
 				 else {
 					 value = nodes.map(metric.value);
@@ -54,7 +123,7 @@
 
 					 metricReducers.forEach(function (metricReducer) {
 						 var reducer = (LayoutStats.getReducer(metricReducer) ? LayoutStats.getReducer(metricReducer) : metricReducer);
-						 var reducedValue = value.reduce(reducer.fn, reducer.initialValue());
+						 var reducedValue = reduce.call(value, reducer.fn, reducer.initialValue());
 						 var reduceKey = metric.group + (reducer.metricPrefix || '') + key + (reducer.metricSuffix || '');
 						 measurements[reduceKey] = reducedValue;
 					 });
@@ -97,7 +166,7 @@ function sortKeysByValue (obj){
 var selectors = {
 	'images': function (node){
 		//filter all images greater 50x50px;
-		return Array.prototype.filter.call(node.querySelectorAll('img'),function(img){
+		return filter.call(node.querySelectorAll('img'),function(img){
 			return img.width > 50 && img.height > 50;
 		})
 	},
@@ -195,9 +264,9 @@ var reducers = {
 			acc = incrementAcc(acc, item);
 			//return the total count if we arrived at the last element
 			if (itemIndex === array.length -1){
-				var avg = Object.keys(acc).reduce(function(avg,key){
+				var avg = reduce.call(Object.keys(acc),function(avg,key){
 					avg.sum += (parseFloat(key,10) * acc[key]);
-					avg.amount += acc[key]
+					avg.amount += acc[key];
 					return avg
 				},{sum: 0,amount:0});
 				return avg.sum/avg.amount;
